@@ -1,15 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
 
 :root {
-  --primary: #6366f1;
-  --primary-hover: #4f46e5;
+  --primary: #8b5cf6;
+  --primary-hover: #7c3aed;
+  --secondary: #ec4899;
   --bg-dark: #0f172a;
-  --bg-card: rgba(30, 41, 59, 0.7);
+  --bg-card: rgba(30, 41, 59, 0.4);
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
   --success: #10b981;
   --danger: #ef4444;
   --border-color: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.05);
 }
 
 * {
@@ -26,128 +28,202 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-image: 
-    radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.15), transparent 25%),
-    radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.15), transparent 25%);
   overflow-x: hidden;
+  background: 
+    radial-gradient(circle at 10% 20%, rgba(139, 92, 246, 0.15), transparent 30%),
+    radial-gradient(circle at 90% 80%, rgba(236, 72, 153, 0.15), transparent 30%),
+    url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+CjxyZWN0IHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgZmlsbD0idHJhbnNwYXJlbnQiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMSIgZmlsbD0icmdiYSgyNTUsIDI1NSwgMjU1LCAwLjA1KSIvPgo8L3N2Zz4=') var(--bg-dark);
 }
 
 .app-container {
   width: 100%;
-  max-width: 600px;
+  max-width: 650px;
   padding: 2rem;
+  animation: fadeIn 0.8s ease-out;
 }
 
 h1 {
-  font-size: 2.5rem;
+  font-size: 3rem;
   text-align: center;
-  margin-bottom: 2rem;
-  background: linear-gradient(135deg, #a855f7, #6366f1);
+  margin-bottom: 2.5rem;
+  background: linear-gradient(135deg, var(--secondary), var(--primary));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+  text-shadow: 0 4px 20px rgba(139, 92, 246, 0.3);
+  letter-spacing: -0.02em;
 }
 
-.card {
+/* Glassmorphism Panel */
+.glass-panel {
   background: var(--bg-card);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
-  padding: 2rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  padding: 2.5rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
+.header-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.header-actions h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+/* Wallet Dashboard Elements */
+.wallet-dashboard {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.balance-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0.4rem 0.8rem;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+}
+
+.balance-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.balance-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--success);
+}
+
+/* Buttons */
 .btn {
-  background: var(--primary);
+  background: linear-gradient(135deg, var(--primary), #6d28d9);
   color: white;
   border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
+  padding: 0.8rem 1.75rem;
+  border-radius: 12px;
   font-family: 'Outfit', sans-serif;
   font-weight: 600;
   font-size: 1rem;
   cursor: pointer;
-  transition: all 0.2s ease;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
 }
 
 .btn:hover:not(:disabled) {
-  background: var(--primary-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.5);
 }
 
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
 }
 
 .btn-secondary {
-  background: transparent;
-  border: 1px solid var(--border-color);
-}
-.btn-secondary:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  box-shadow: none;
 }
 
+.btn-secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Status Badges & Transaction Links */
 .status-badge {
-  display: inline-block;
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-size: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-radius: 16px;
+  font-size: 0.95rem;
   font-weight: 600;
+  margin-bottom: 2rem;
+  animation: slideDown 0.3s ease-out;
+  text-align: center;
 }
 
 .status-success {
-  background: rgba(16, 185, 129, 0.2);
+  background: rgba(16, 185, 129, 0.15);
   color: var(--success);
-  border: 1px solid var(--success);
+  border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 .status-danger {
-  background: rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.15);
   color: var(--danger);
-  border: 1px solid var(--danger);
+  border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
 .status-pending {
-  background: rgba(245, 158, 11, 0.2);
-  color: #f59e0b;
-  border: 1px solid #f59e0b;
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* Poll Specifics */
+.tx-link {
+  font-size: 0.85rem;
+  color: #38bdf8;
+  text-decoration: none;
+  background: rgba(56, 189, 248, 0.1);
+  padding: 0.3rem 0.8rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.tx-link:hover {
+  background: rgba(56, 189, 248, 0.2);
+  text-decoration: underline;
+}
+
+.tx-link::after {
+  content: '↗';
+  font-size: 1rem;
+}
+
+/* Poll Options */
 .poll-options {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  margin-top: 1.5rem;
+  gap: 1.25rem;
 }
 
 .poll-option {
   position: relative;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 1rem 1.5rem;
+  border-radius: 16px;
+  padding: 1.25rem 1.75rem;
   cursor: pointer;
   overflow: hidden;
-  transition: border-color 0.2s ease;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .poll-option:hover {
-  border-color: var(--primary);
-}
-
-.poll-option.selected {
-  border-color: var(--primary);
-  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(139, 92, 246, 0.5);
+  transform: translateX(4px);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .poll-progress {
@@ -155,9 +231,10 @@ h1 {
   top: 0;
   left: 0;
   height: 100%;
-  background: rgba(99, 102, 241, 0.2);
+  background: linear-gradient(90deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.2));
   z-index: 0;
-  transition: width 0.5s ease-in-out;
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+  border-right: 1px solid rgba(255,255,255,0.1);
 }
 
 .poll-content {
@@ -165,10 +242,46 @@ h1 {
   z-index: 1;
   display: flex;
   justify-content: space-between;
+  align-items: center;
   width: 100%;
   font-weight: 600;
+  font-size: 1.1rem;
 }
 
 .poll-votes {
-  color: var(--text-muted);
+  color: var(--text-main);
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.3rem 0.8rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  border: 1px solid var(--glass-border);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .header-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .wallet-dashboard {
+    width: 100%;
+    justify-content: space-between;
+  }
+  h1 { font-size: 2.2rem; }
 }

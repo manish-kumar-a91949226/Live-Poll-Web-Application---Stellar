@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
 import { StellarWalletsKit, Networks } from '@creit.tech/stellar-wallets-kit';
-import { XBULL_ID } from '@creit.tech/stellar-wallets-kit/modules/xbull';
 import { defaultModules } from '@creit.tech/stellar-wallets-kit/modules/utils';
-import { getPollVotes, buildVoteTransaction, server, NETWORK_PASSPHRASE } from './stellar';
+import { getPollVotes, buildVoteTransaction, server, NETWORK_PASSPHRASE, getNativeBalance } from './stellar';
 import './App.css';
 
 function App() {
   const [kit, setKit] = useState(null);
   const [pubKey, setPubKey] = useState(null);
+  const [balance, setBalance] = useState("0.00");
   const [status, setStatus] = useState(""); // pending, success, danger
   const [statusMsg, setStatusMsg] = useState("");
+  const [txHash, setTxHash] = useState("");
   const [votes, setVotes] = useState({ A: 0, B: 0 });
 
   const fetchVotes = async () => {
@@ -18,10 +19,9 @@ function App() {
   };
 
   useEffect(() => {
-    // Initialize StellarWalletsKit
+    // Initialize StellarWalletsKit without hardcoded wallet to show modal
     const swk = new StellarWalletsKit({
       network: Networks.TESTNET,
-      selectedWalletId: XBULL_ID,
       modules: defaultModules(),
     });
     setKit(swk);
@@ -40,6 +40,8 @@ function App() {
           kit.setWallet(option.id);
           const publicKey = await kit.getPublicKey();
           setPubKey(publicKey);
+          const bal = await getNativeBalance(publicKey);
+          setBalance(bal);
         }
       });
     } catch (e) {
@@ -59,6 +61,7 @@ function App() {
     try {
       setStatus("pending");
       setStatusMsg("Building transaction...");
+      setTxHash("");
 
       const optionNum = optionStr === 'A' ? 1 : 2;
       const tx = await buildVoteTransaction(pubKey, optionNum);
@@ -89,12 +92,17 @@ function App() {
 
       setStatus("success");
       setStatusMsg(`Vote cast for Option ${optionStr} successfully!`);
+      setTxHash(txResult.hash);
+      
       fetchVotes(); // refresh immediately
+      const newBal = await getNativeBalance(pubKey);
+      setBalance(newBal);
       
       setTimeout(() => {
         setStatus("");
         setStatusMsg("");
-      }, 5000);
+        setTxHash("");
+      }, 8000);
 
     } catch (e) {
       console.error(e);
@@ -124,21 +132,37 @@ function App() {
     <div className="app-container">
       <h1>Stellar Live Poll</h1>
       
-      <div className="card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+      <div className="card glass-panel">
+        <div className="header-actions">
           <h2>Best Smart Contract Language?</h2>
           {!pubKey ? (
-            <button className="btn" onClick={connectWallet}>Connect Wallet</button>
+            <button className="btn btn-connect" onClick={connectWallet}>Connect Wallet</button>
           ) : (
-            <button className="btn btn-secondary" title={pubKey}>
-              {pubKey.substring(0, 4)}...{pubKey.substring(pubKey.length - 4)}
-            </button>
+            <div className="wallet-dashboard">
+              <div className="balance-badge">
+                <span className="balance-label">Balance</span>
+                <span className="balance-value">{balance} XLM</span>
+              </div>
+              <button className="btn btn-secondary" title={pubKey}>
+                {pubKey.substring(0, 4)}...{pubKey.substring(pubKey.length - 4)}
+              </button>
+            </div>
           )}
         </div>
 
         {statusMsg && (
-          <div className={`status-badge status-${status}`} style={{ marginBottom: '1rem', width: '100%', textAlign: 'center' }}>
+          <div className={`status-badge status-${status}`}>
             {statusMsg}
+            {txHash && (
+              <a 
+                href={`https://stellar.expert/explorer/testnet/tx/${txHash}`} 
+                target="_blank" 
+                rel="noreferrer"
+                className="tx-link"
+              >
+                View on Stellar Explorer
+              </a>
+            )}
           </div>
         )}
 

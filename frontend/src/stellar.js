@@ -1,10 +1,25 @@
-import { Contract, Networks, TransactionBuilder, rpc, xdr, Address, nativeToScVal } from '@stellar/stellar-sdk';
+import { Contract, Networks, TransactionBuilder, rpc, xdr, Address, nativeToScVal, Horizon } from '@stellar/stellar-sdk';
 
 const RPC_URL = "https://soroban-testnet.stellar.org:443";
 export const NETWORK_PASSPHRASE = Networks.TESTNET;
 export const CONTRACT_ID = "CALMB3XPIMAG63YDARE52FJXIITT3RUB3JWC4ZRKZKS7BYJZZ2MF2VHR";
 
 export const server = new rpc.Server(RPC_URL);
+export const horizonServer = new Horizon.Server("https://horizon-testnet.stellar.org");
+
+/**
+ * Get native XLM balance for a user
+ */
+export async function getNativeBalance(publicKey) {
+  try {
+    const account = await horizonServer.loadAccount(publicKey);
+    const nativeBalance = account.balances.find(b => b.asset_type === 'native');
+    return nativeBalance ? nativeBalance.balance : "0.00";
+  } catch (e) {
+    console.error("Failed to fetch balance:", e);
+    return "0.00";
+  }
+}
 
 /**
  * Get current votes from the contract
