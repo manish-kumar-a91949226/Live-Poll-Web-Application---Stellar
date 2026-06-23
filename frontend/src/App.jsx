@@ -128,6 +128,7 @@ function App() {
     <div className="app-container">
       <h1>Stellar Live Poll</h1>
       
+      <div className="cards-grid">
       <div className="card glass-panel">
         <div className="header-actions">
           <div>
@@ -206,6 +207,86 @@ function App() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Card 3 */}
+      <div className="card glass-panel">
+        <div className="header-actions">
+          <div>
+            <h2>Most Promising Hackathon Track?</h2>
+            <p style={{ color: "var(--text-muted)", marginTop: "0.5rem", fontSize: "0.9rem" }}>Total votes cast: 128</p>
+          </div>
+        </div>
+        <div className="poll-options">
+          <div className="poll-option" onClick={() => { setStatus("pending"); setStatusMsg("Coming soon! Only first poll is live on mainnet."); setTimeout(() => { setStatus(""); setStatusMsg(""); }, 3000); }}>
+            <div className="poll-progress" style={{ width: `45%` }}></div>
+            <div className="poll-content">
+              <span>DeFi</span>
+              <span className="poll-votes">45% (58)</span>
+            </div>
+          </div>
+          <div className="poll-option" onClick={() => { setStatus("pending"); setStatusMsg("Coming soon! Only first poll is live on mainnet."); setTimeout(() => { setStatus(""); setStatusMsg(""); }, 3000); }}>
+            <div className="poll-progress" style={{ width: `55%` }}></div>
+            <div className="poll-content">
+              <span>Smart Contracts</span>
+              <span className="poll-votes">55% (70)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Card 4 */}
+      <div className="card glass-panel">
+        <div className="header-actions">
+          <div>
+            <h2>Preferred Wallet Extension?</h2>
+            <p style={{ color: "var(--text-muted)", marginTop: "0.5rem", fontSize: "0.9rem" }}>Total votes cast: 89</p>
+          </div>
+        </div>
+        <div className="poll-options">
+          <div className="poll-option" onClick={() => { setStatus("pending"); setStatusMsg("Coming soon! Only first poll is live on mainnet."); setTimeout(() => { setStatus(""); setStatusMsg(""); }, 3000); }}>
+            <div className="poll-progress" style={{ width: `60%` }}></div>
+            <div className="poll-content">
+              <span>Freighter</span>
+              <span className="poll-votes">60% (53)</span>
+            </div>
+          </div>
+          <div className="poll-option" onClick={() => { setStatus("pending"); setStatusMsg("Coming soon! Only first poll is live on mainnet."); setTimeout(() => { setStatus(""); setStatusMsg(""); }, 3000); }}>
+            <div className="poll-progress" style={{ width: `40%` }}></div>
+            <div className="poll-content">
+              <span>xBull</span>
+              <span className="poll-votes">40% (36)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Card 5 */}
+      <div className="card glass-panel">
+        <div className="header-actions">
+          <div>
+            <h2>Best Blockchain Concept?</h2>
+            <p style={{ color: "var(--text-muted)", marginTop: "0.5rem", fontSize: "0.9rem" }}>Total votes cast: 215</p>
+          </div>
+        </div>
+        <div className="poll-options">
+          <div className="poll-option" onClick={() => { setStatus("pending"); setStatusMsg("Coming soon! Only first poll is live on mainnet."); setTimeout(() => { setStatus(""); setStatusMsg(""); }, 3000); }}>
+            <div className="poll-progress" style={{ width: `82%` }}></div>
+            <div className="poll-content">
+              <span>Decentralization</span>
+              <span className="poll-votes">82% (176)</span>
+            </div>
+          </div>
+          <div className="poll-option" onClick={() => { setStatus("pending"); setStatusMsg("Coming soon! Only first poll is live on mainnet."); setTimeout(() => { setStatus(""); setStatusMsg(""); }, 3000); }}>
+            <div className="poll-progress" style={{ width: `18%` }}></div>
+            <div className="poll-content">
+              <span>Tokenomics</span>
+              <span className="poll-votes">18% (39)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       </div>
     </div>
   );

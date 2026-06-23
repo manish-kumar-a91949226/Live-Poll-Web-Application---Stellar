@@ -37,9 +37,17 @@ body {
 
 .app-container {
   width: 100%;
-  max-width: 650px;
+  max-width: 1400px;
   padding: 2rem;
   animation: fadeIn 0.8s ease-out;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 2rem;
+  width: 100%;
+  align-items: start;
 }
 
 h1 {
