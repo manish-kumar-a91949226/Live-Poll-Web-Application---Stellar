@@ -5,7 +5,6 @@ import { getPollVotes, buildVoteTransaction, server, NETWORK_PASSPHRASE, getNati
 import './App.css';
 
 function App() {
-  const [kit, setKit] = useState(null);
   const [pubKey, setPubKey] = useState(null);
   const [balance, setBalance] = useState("0.00");
   const [status, setStatus] = useState(""); // pending, success, danger
@@ -19,12 +18,11 @@ function App() {
   };
 
   useEffect(() => {
-    // Initialize StellarWalletsKit without hardcoded wallet to show modal
-    const swk = new StellarWalletsKit({
+    // Initialize StellarWalletsKit static class
+    StellarWalletsKit.init({
       network: Networks.TESTNET,
       modules: defaultModules(),
     });
-    setKit(swk);
 
     fetchVotes();
     // Poll for updates every 10 seconds
@@ -34,16 +32,10 @@ function App() {
 
   const connectWallet = async () => {
     try {
-      if (!kit) return;
-      await kit.openModal({
-        onWalletSelected: async (option) => {
-          kit.setWallet(option.id);
-          const publicKey = await kit.getPublicKey();
-          setPubKey(publicKey);
-          const bal = await getNativeBalance(publicKey);
-          setBalance(bal);
-        }
-      });
+      const { address } = await StellarWalletsKit.authModal();
+      setPubKey(address);
+      const bal = await getNativeBalance(address);
+      setBalance(bal);
     } catch (e) {
       console.error(e);
       setStatus("danger");
@@ -68,14 +60,12 @@ function App() {
 
       setStatusMsg("Please sign the transaction in your wallet...");
       
-      const signedTxXdr = await kit.signTx({
-        xdr: tx.toXDR(),
-        publicKeys: [pubKey],
-        network: NETWORK_PASSPHRASE
+      const { signedTxXdr } = await StellarWalletsKit.signTransaction(tx.toXDR(), {
+        networkPassphrase: NETWORK_PASSPHRASE
       });
 
       setStatusMsg("Submitting transaction to network...");
-      const txResult = await server.sendTransaction(signedTxXdr.signedTxXdr || signedTxXdr); // Handle different return formats from wallets
+      const txResult = await server.sendTransaction(signedTxXdr); // Handle different return formats from wallets
 
       if (txResult.status === "ERROR") {
           throw new Error("Transaction failed on the network");
@@ -134,7 +124,10 @@ function App() {
       
       <div className="card glass-panel">
         <div className="header-actions">
-          <h2>Best Smart Contract Language?</h2>
+          <div>
+            <h2>Best Smart Contract Language?</h2>
+            <p style={{ color: "var(--text-muted)", marginTop: "0.5rem", fontSize: "0.9rem" }}>Total votes cast: {totalVotes}</p>
+          </div>
           {!pubKey ? (
             <button className="btn btn-connect" onClick={connectWallet}>Connect Wallet</button>
           ) : (
