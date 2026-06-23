@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { StellarWalletsKit, WalletNetwork, allowAllModules, XBULL_ID } from '@creit.tech/stellar-wallets-kit';
+import { StellarWalletsKit, Networks } from '@creit.tech/stellar-wallets-kit';
+import { XBULL_ID } from '@creit.tech/stellar-wallets-kit/modules/xbull';
+import { defaultModules } from '@creit.tech/stellar-wallets-kit/modules/utils';
 import { getPollVotes, buildVoteTransaction, server, NETWORK_PASSPHRASE } from './stellar';
 import './App.css';
 
@@ -18,9 +20,9 @@ function App() {
   useEffect(() => {
     // Initialize StellarWalletsKit
     const swk = new StellarWalletsKit({
-      network: WalletNetwork.TESTNET,
+      network: Networks.TESTNET,
       selectedWalletId: XBULL_ID,
-      modules: allowAllModules(),
+      modules: defaultModules(),
     });
     setKit(swk);
 
