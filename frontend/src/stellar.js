@@ -3,7 +3,12 @@ export const TransactionBuilder = TB;
 
 const RPC_URL = "https://soroban-testnet.stellar.org:443";
 export const NETWORK_PASSPHRASE = Networks.TESTNET;
-export const CONTRACT_ID = "CBUG37SP3SNYGOS65YSKYY236XHNFN3IJEKRGGLGPSQKXPIU7DRIUARJ";
+export const POLL_CONTRACTS = {
+  1: "CBUG37SP3SNYGOS65YSKYY236XHNFN3IJEKRGGLGPSQKXPIU7DRIUARJ",
+  2: "CDWCRN7KGQ5NV55I6K323IMYV4W7ONIKP3NAPC23DW5JSVRJNCOQPDIM",
+  3: "CARPEGCVTFWEVTLFGYCSZ2AVPWEUYRSGHYVEQ2MBBJRIFSAT7NOU2EIB",
+  4: "CCSN7R64NVN2RVLFGLYQBAYNF5BZZ6MZH2KBJNBOD4SNYE5ZG2Q4CQBB",
+};
 export const SPONSOR_DESTINATION = "GBV7SLQKG4S7S3M3F4WCUJKK775IL24X6QGYH3YCGYSZNZWSK7IJCGPX"; // Mock destination for donations
 
 export const server = new rpc.Server(RPC_URL);
@@ -26,8 +31,8 @@ export async function getNativeBalance(publicKey) {
 /**
  * Get current votes from the contract
  */
-export async function getPollVotes() {
-  const contract = new Contract(CONTRACT_ID);
+export async function getPollVotes(pollId = 1) {
+  const contract = new Contract(POLL_CONTRACTS[pollId]);
   
   // To read state without signing, we can simulate the transaction or
   // just read the storage from the RPC. However, simulateTransaction is easier.
@@ -60,13 +65,8 @@ export async function getPollVotes() {
 /**
  * Builds the vote transaction (requires 1 XLM payment)
  */
-export async function buildVoteTransaction(publicKey, optionNum) {
+export async function buildVoteFeeTransaction(publicKey) {
   const accountResponse = await server.getAccount(publicKey);
-  const contract = new Contract(CONTRACT_ID);
-  
-  const voterVal = new Address(publicKey).toScVal();
-  const optionVal = nativeToScVal(optionNum, { type: 'u32' });
-
   const tx = new TransactionBuilder(accountResponse, {
     fee: "100",
     networkPassphrase: NETWORK_PASSPHRASE,
@@ -76,6 +76,26 @@ export async function buildVoteTransaction(publicKey, optionNum) {
       asset: Asset.native(),
       amount: "1.0000000",
     }))
+    .setTimeout(30)
+    .build();
+
+  return tx.toEnvelope().toXDR('base64');
+}
+
+/**
+ * Builds the vote transaction
+ */
+export async function buildVoteTransaction(publicKey, optionNum, pollId = 1) {
+  const accountResponse = await server.getAccount(publicKey);
+  const contract = new Contract(POLL_CONTRACTS[pollId]);
+  
+  const voterVal = new Address(publicKey).toScVal();
+  const optionVal = nativeToScVal(optionNum, { type: 'u32' });
+
+  const tx = new TransactionBuilder(accountResponse, {
+    fee: "100",
+    networkPassphrase: NETWORK_PASSPHRASE,
+  })
     .addOperation(contract.call("vote", voterVal, optionVal))
     .setTimeout(30)
     .build();

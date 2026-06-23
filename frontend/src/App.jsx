@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { StellarWalletsKit, Networks } from '@creit.tech/stellar-wallets-kit';
 import { defaultModules } from '@creit.tech/stellar-wallets-kit/modules/utils';
-import { getPollVotes, buildVoteTransaction, buildSponsorTransaction, server, NETWORK_PASSPHRASE, getNativeBalance, TransactionBuilder } from './stellar';
+import { getPollVotes, buildVoteTransaction, buildVoteFeeTransaction, buildSponsorTransaction, server, NETWORK_PASSPHRASE, getNativeBalance, TransactionBuilder } from './stellar';
 import './App.css';
 
 function App() {
@@ -10,22 +10,28 @@ function App() {
   const [status, setStatus] = useState(""); // pending, success, danger
   const [statusMsg, setStatusMsg] = useState("");
   const [txHash, setTxHash] = useState("");
-  const [votes, setVotes] = useState({ A: 0, B: 0 });
+  const [votes, setVotes] = useState({
+    1: { A: 0, B: 0 },
+    2: { A: 0, B: 0 },
+    3: { A: 0, B: 0 },
+    4: { A: 0, B: 0 }
+  });
 
   const fetchVotes = async () => {
-    const v = await getPollVotes();
-    setVotes(v);
+    const newVotes = { ...votes };
+    for (let i = 1; i <= 4; i++) {
+      newVotes[i] = await getPollVotes(i);
+    }
+    setVotes(newVotes);
   };
 
   useEffect(() => {
-    // Initialize StellarWalletsKit static class
     StellarWalletsKit.init({
       network: Networks.TESTNET,
       modules: defaultModules(),
     });
 
     fetchVotes();
-    // Poll for updates every 10 seconds
     const interval = setInterval(fetchVotes, 10000);
     return () => clearInterval(interval);
   }, []);
@@ -55,7 +61,6 @@ function App() {
       setStatusMsg("Building XLM transaction...");
       setTxHash("");
 
-      // 10 XLM sponsorship
       const tx = await buildSponsorTransaction(pubKey, "10.0000000");
 
       setStatusMsg("Please sign the XLM transfer in your wallet...");
@@ -102,7 +107,7 @@ function App() {
     }
   };
 
-  const handleVote = async (optionStr) => {
+  const handleVote = async (pollId, optionStr) => {
     if (!pubKey) {
       setStatus("danger");
       setStatusMsg("Please connect your wallet first.");
@@ -111,44 +116,62 @@ function App() {
 
     try {
       setStatus("pending");
-      setStatusMsg("Building transaction...");
       setTxHash("");
 
-      const optionNum = optionStr === 'A' ? 1 : 2;
-      const tx = await buildVoteTransaction(pubKey, optionNum);
-
-      setStatusMsg("Please sign the transaction in your wallet...");
+      // STEP 1: Pay 1 XLM Fee
+      setStatusMsg("Step 1/2: Please sign the 1 XLM Fee transaction...");
+      const feeTx = await buildVoteFeeTransaction(pubKey);
       
-      let xdrString = tx;
-      if (typeof tx !== 'string') {
-        if (typeof tx.toXDR === 'function') xdrString = tx.toXDR();
-        else if (typeof tx.toEnvelope === 'function') xdrString = tx.toEnvelope().toXDR('base64');
-      }
-
-      const { signedTxXdr } = await StellarWalletsKit.signTransaction(xdrString, {
+      const { signedTxXdr: signedFeeTx } = await StellarWalletsKit.signTransaction(feeTx, {
         networkPassphrase: NETWORK_PASSPHRASE
       });
 
-      setStatusMsg("Submitting transaction to network...");
-      const parsedSignedTx = TransactionBuilder.fromXDR(signedTxXdr, NETWORK_PASSPHRASE);
-      const txResult = await server.sendTransaction(parsedSignedTx); 
+      setStatusMsg("Submitting fee transaction to network...");
+      const parsedFeeTx = TransactionBuilder.fromXDR(signedFeeTx, NETWORK_PASSPHRASE);
+      const feeTxResult = await server.sendTransaction(parsedFeeTx); 
 
-      if (txResult.status === "ERROR") {
-          throw new Error("Transaction failed on the network");
+      if (feeTxResult.status === "ERROR") throw new Error("Fee transaction failed on network");
+
+      let feeStatus = feeTxResult.status;
+      while (feeStatus === "PENDING") {
+          await new Promise(r => setTimeout(r, 2000));
+          const res = await server.getTransaction(feeTxResult.hash);
+          feeStatus = res.status;
+          if (feeStatus === "FAILED") throw new Error("Fee transaction execution failed");
       }
 
-      // Wait for it to be confirmed
-      let txStatus = txResult.status;
-      while (txStatus === "PENDING") {
+      // STEP 2: Cast the Vote
+      setStatusMsg("Step 2/2: Please sign the Smart Contract Vote transaction...");
+      const optionNum = optionStr === 'A' ? 1 : 2;
+      const voteTx = await buildVoteTransaction(pubKey, optionNum, pollId);
+      
+      let xdrString = voteTx;
+      if (typeof voteTx !== 'string') {
+        if (typeof voteTx.toXDR === 'function') xdrString = voteTx.toXDR();
+        else if (typeof voteTx.toEnvelope === 'function') xdrString = voteTx.toEnvelope().toXDR('base64');
+      }
+
+      const { signedTxXdr: signedVoteTx } = await StellarWalletsKit.signTransaction(xdrString, {
+        networkPassphrase: NETWORK_PASSPHRASE
+      });
+
+      setStatusMsg("Submitting vote transaction to network...");
+      const parsedVoteTx = TransactionBuilder.fromXDR(signedVoteTx, NETWORK_PASSPHRASE);
+      const voteTxResult = await server.sendTransaction(parsedVoteTx); 
+
+      if (voteTxResult.status === "ERROR") throw new Error("Vote transaction failed on network");
+
+      let voteStatus = voteTxResult.status;
+      while (voteStatus === "PENDING") {
           await new Promise(r => setTimeout(r, 2000));
-          const res = await server.getTransaction(txResult.hash);
-          txStatus = res.status;
-          if (txStatus === "FAILED") throw new Error("Transaction execution failed");
+          const res = await server.getTransaction(voteTxResult.hash);
+          voteStatus = res.status;
+          if (voteStatus === "FAILED") throw new Error("Vote transaction execution failed");
       }
 
       setStatus("success");
       setStatusMsg(`Vote cast for Option ${optionStr} successfully!`);
-      setTxHash(txResult.hash);
+      setTxHash(voteTxResult.hash);
       
       fetchVotes(); // refresh immediately
       const newBal = await getNativeBalance(pubKey);
@@ -171,9 +194,6 @@ function App() {
         setStatusMsg("Error: Transaction was rejected by the user.");
       } else if (msg.includes("balance") || msg.includes("insufficient") || msg.includes("tx_insufficient_balance")) {
         setStatusMsg("Error: Insufficient balance to cover fees.");
-      } else if (msg.includes("Already voted") || msg.includes("already voted") || msg.includes("UnreachableCodeReached")) {
-        // Double voting is now allowed, so this error shouldn't happen unless the contract fails for another reason.
-        setStatusMsg("Error: You have already voted in this poll!");
       } else {
         setStatusMsg("Transaction failed: " + msg.substring(0, 50));
       }
@@ -181,9 +201,22 @@ function App() {
     }
   };
 
-  const totalVotes = votes.A + votes.B;
-  const pctA = totalVotes === 0 ? 0 : Math.round((votes.A / totalVotes) * 100);
-  const pctB = totalVotes === 0 ? 0 : Math.round((votes.B / totalVotes) * 100);
+  const getPollStats = (pollId) => {
+    const v = votes[pollId] || { A: 0, B: 0 };
+    const total = v.A + v.B;
+    return {
+      A: v.A,
+      B: v.B,
+      total,
+      pctA: total === 0 ? 0 : Math.round((v.A / total) * 100),
+      pctB: total === 0 ? 0 : Math.round((v.B / total) * 100)
+    };
+  };
+
+  const poll1 = getPollStats(1);
+  const poll2 = getPollStats(2);
+  const poll3 = getPollStats(3);
+  const poll4 = getPollStats(4);
 
   return (
     <div className="app-container">
@@ -237,107 +270,107 @@ function App() {
                   Best Smart Contract Language? 
                   <span className="live-badge">LIVE</span>
                 </h2>
-                <p style={{ color: "var(--text-muted)", marginTop: "0.5rem", fontSize: "0.9rem" }}>Total votes cast: {totalVotes}</p>
+                <p style={{ color: "var(--text-muted)", marginTop: "0.5rem", fontSize: "0.9rem" }}>Total votes cast: {poll1.total}</p>
               </div>
             </div>
 
             <div className="poll-options">
-              <div className="poll-option" onClick={() => handleVote('A')}>
-                <div className="poll-progress" style={{ width: `${pctA}%` }}></div>
+              <div className="poll-option" onClick={() => handleVote(1, 'A')}>
+                <div className="poll-progress" style={{ width: `${poll1.pctA}%` }}></div>
                 <div className="poll-content">
                   <span>Rust (Soroban) <span style={{fontSize: "0.8rem", color: "var(--primary-color)"}}>(Fee: 1 XLM)</span></span>
-                  <span className="poll-votes">{pctA}% ({votes.A})</span>
+                  <span className="poll-votes">{poll1.pctA}% ({poll1.A})</span>
                 </div>
               </div>
-              <div className="poll-option" onClick={() => handleVote('B')}>
-                <div className="poll-progress" style={{ width: `${pctB}%` }}></div>
+              <div className="poll-option" onClick={() => handleVote(1, 'B')}>
+                <div className="poll-progress" style={{ width: `${poll1.pctB}%` }}></div>
                 <div className="poll-content">
                   <span>Solidity <span style={{fontSize: "0.8rem", color: "var(--primary-color)"}}>(Fee: 1 XLM)</span></span>
-                  <span className="poll-votes">{pctB}% ({votes.B})</span>
+                  <span className="poll-votes">{poll1.pctB}% ({poll1.B})</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="card glass-panel" style={{ opacity: 0.6, position: 'relative' }}>
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.4)', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '24px' }}>
-              <span style={{ background: 'var(--primary-color)', padding: '0.5rem 1rem', borderRadius: '12px', fontWeight: 'bold' }}>COMING SOON</span>
-            </div>
+          <div className="card glass-panel" style={{ border: '2px solid rgba(139, 92, 246, 0.5)' }}>
             <div className="header-actions">
               <div>
-                <h2>Favorite Web3 Ecosystem?</h2>
-                <p style={{ color: "var(--text-muted)", marginTop: "0.5rem", fontSize: "0.9rem" }}>Total votes cast: 42</p>
+                <h2>
+                  Favorite Web3 Ecosystem?
+                  <span className="live-badge">LIVE</span>
+                </h2>
+                <p style={{ color: "var(--text-muted)", marginTop: "0.5rem", fontSize: "0.9rem" }}>Total votes cast: {poll2.total}</p>
               </div>
             </div>
             <div className="poll-options">
-              <div className="poll-option" onClick={() => { setStatus("pending"); setStatusMsg("Coming soon! Only first poll is live on mainnet."); setTimeout(() => { setStatus(""); setStatusMsg(""); }, 3000); }}>
-                <div className="poll-progress" style={{ width: `75%` }}></div>
+              <div className="poll-option" onClick={() => handleVote(2, 'A')}>
+                <div className="poll-progress" style={{ width: `${poll2.pctA}%` }}></div>
                 <div className="poll-content">
-                  <span>Stellar</span>
-                  <span className="poll-votes">75% (31)</span>
+                  <span>Stellar <span style={{fontSize: "0.8rem", color: "var(--primary-color)"}}>(Fee: 1 XLM)</span></span>
+                  <span className="poll-votes">{poll2.pctA}% ({poll2.A})</span>
                 </div>
               </div>
-              <div className="poll-option" onClick={() => { setStatus("pending"); setStatusMsg("Coming soon! Only first poll is live on mainnet."); setTimeout(() => { setStatus(""); setStatusMsg(""); }, 3000); }}>
-                <div className="poll-progress" style={{ width: `25%` }}></div>
+              <div className="poll-option" onClick={() => handleVote(2, 'B')}>
+                <div className="poll-progress" style={{ width: `${poll2.pctB}%` }}></div>
                 <div className="poll-content">
-                  <span>Ethereum</span>
-                  <span className="poll-votes">25% (11)</span>
+                  <span>Ethereum <span style={{fontSize: "0.8rem", color: "var(--primary-color)"}}>(Fee: 1 XLM)</span></span>
+                  <span className="poll-votes">{poll2.pctB}% ({poll2.B})</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="card glass-panel" style={{ opacity: 0.6, position: 'relative' }}>
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.4)', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '24px' }}>
-              <span style={{ background: 'var(--primary-color)', padding: '0.5rem 1rem', borderRadius: '12px', fontWeight: 'bold' }}>COMING SOON</span>
-            </div>
+          <div className="card glass-panel" style={{ border: '2px solid rgba(139, 92, 246, 0.5)' }}>
             <div className="header-actions">
               <div>
-                <h2>Most Promising Hackathon Track?</h2>
-                <p style={{ color: "var(--text-muted)", marginTop: "0.5rem", fontSize: "0.9rem" }}>Total votes cast: 128</p>
+                <h2>
+                  Most Promising Hackathon Track?
+                  <span className="live-badge">LIVE</span>
+                </h2>
+                <p style={{ color: "var(--text-muted)", marginTop: "0.5rem", fontSize: "0.9rem" }}>Total votes cast: {poll3.total}</p>
               </div>
             </div>
             <div className="poll-options">
-              <div className="poll-option" onClick={() => { setStatus("pending"); setStatusMsg("Coming soon! Only first poll is live on mainnet."); setTimeout(() => { setStatus(""); setStatusMsg(""); }, 3000); }}>
-                <div className="poll-progress" style={{ width: `45%` }}></div>
+              <div className="poll-option" onClick={() => handleVote(3, 'A')}>
+                <div className="poll-progress" style={{ width: `${poll3.pctA}%` }}></div>
                 <div className="poll-content">
-                  <span>DeFi</span>
-                  <span className="poll-votes">45% (58)</span>
+                  <span>DeFi <span style={{fontSize: "0.8rem", color: "var(--primary-color)"}}>(Fee: 1 XLM)</span></span>
+                  <span className="poll-votes">{poll3.pctA}% ({poll3.A})</span>
                 </div>
               </div>
-              <div className="poll-option" onClick={() => { setStatus("pending"); setStatusMsg("Coming soon! Only first poll is live on mainnet."); setTimeout(() => { setStatus(""); setStatusMsg(""); }, 3000); }}>
-                <div className="poll-progress" style={{ width: `55%` }}></div>
+              <div className="poll-option" onClick={() => handleVote(3, 'B')}>
+                <div className="poll-progress" style={{ width: `${poll3.pctB}%` }}></div>
                 <div className="poll-content">
-                  <span>Smart Contracts</span>
-                  <span className="poll-votes">55% (70)</span>
+                  <span>Smart Contracts <span style={{fontSize: "0.8rem", color: "var(--primary-color)"}}>(Fee: 1 XLM)</span></span>
+                  <span className="poll-votes">{poll3.pctB}% ({poll3.B})</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="card glass-panel" style={{ opacity: 0.6, position: 'relative' }}>
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.4)', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '24px' }}>
-              <span style={{ background: 'var(--primary-color)', padding: '0.5rem 1rem', borderRadius: '12px', fontWeight: 'bold' }}>COMING SOON</span>
-            </div>
+          <div className="card glass-panel" style={{ border: '2px solid rgba(139, 92, 246, 0.5)' }}>
             <div className="header-actions">
               <div>
-                <h2>Preferred Wallet Extension?</h2>
-                <p style={{ color: "var(--text-muted)", marginTop: "0.5rem", fontSize: "0.9rem" }}>Total votes cast: 89</p>
+                <h2>
+                  Preferred Wallet Extension?
+                  <span className="live-badge">LIVE</span>
+                </h2>
+                <p style={{ color: "var(--text-muted)", marginTop: "0.5rem", fontSize: "0.9rem" }}>Total votes cast: {poll4.total}</p>
               </div>
             </div>
             <div className="poll-options">
-              <div className="poll-option" onClick={() => { setStatus("pending"); setStatusMsg("Coming soon! Only first poll is live on mainnet."); setTimeout(() => { setStatus(""); setStatusMsg(""); }, 3000); }}>
-                <div className="poll-progress" style={{ width: `60%` }}></div>
+              <div className="poll-option" onClick={() => handleVote(4, 'A')}>
+                <div className="poll-progress" style={{ width: `${poll4.pctA}%` }}></div>
                 <div className="poll-content">
-                  <span>Freighter</span>
-                  <span className="poll-votes">60% (53)</span>
+                  <span>Freighter <span style={{fontSize: "0.8rem", color: "var(--primary-color)"}}>(Fee: 1 XLM)</span></span>
+                  <span className="poll-votes">{poll4.pctA}% ({poll4.A})</span>
                 </div>
               </div>
-              <div className="poll-option" onClick={() => { setStatus("pending"); setStatusMsg("Coming soon! Only first poll is live on mainnet."); setTimeout(() => { setStatus(""); setStatusMsg(""); }, 3000); }}>
-                <div className="poll-progress" style={{ width: `40%` }}></div>
+              <div className="poll-option" onClick={() => handleVote(4, 'B')}>
+                <div className="poll-progress" style={{ width: `${poll4.pctB}%` }}></div>
                 <div className="poll-content">
-                  <span>xBull</span>
-                  <span className="poll-votes">40% (36)</span>
+                  <span>xBull <span style={{fontSize: "0.8rem", color: "var(--primary-color)"}}>(Fee: 1 XLM)</span></span>
+                  <span className="poll-votes">{poll4.pctB}% ({poll4.B})</span>
                 </div>
               </div>
             </div>
