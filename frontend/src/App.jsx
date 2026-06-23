@@ -120,7 +120,8 @@ function App() {
 
       // STEP 1: Pay 1 XLM Fee
       setStatusMsg("Step 1/2: Please sign the 1 XLM Fee transaction...");
-      const feeTx = await buildVoteFeeTransaction(pubKey);
+      const accountResponse = await server.getAccount(pubKey);
+      const feeTx = await buildVoteFeeTransaction(accountResponse);
       
       const { signedTxXdr: signedFeeTx } = await StellarWalletsKit.signTransaction(feeTx, {
         networkPassphrase: NETWORK_PASSPHRASE
@@ -143,7 +144,7 @@ function App() {
       // STEP 2: Cast the Vote
       setStatusMsg("Step 2/2: Please sign the Smart Contract Vote transaction...");
       const optionNum = optionStr === 'A' ? 1 : 2;
-      const voteTx = await buildVoteTransaction(pubKey, optionNum, pollId);
+      const voteTx = await buildVoteTransaction(accountResponse, optionNum, pollId);
       
       let xdrString = voteTx;
       if (typeof voteTx !== 'string') {

@@ -65,8 +65,7 @@ export async function getPollVotes(pollId = 1) {
 /**
  * Builds the vote transaction (requires 1 XLM payment)
  */
-export async function buildVoteFeeTransaction(publicKey) {
-  const accountResponse = await server.getAccount(publicKey);
+export async function buildVoteFeeTransaction(accountResponse) {
   const tx = new TransactionBuilder(accountResponse, {
     fee: "100",
     networkPassphrase: NETWORK_PASSPHRASE,
@@ -85,11 +84,10 @@ export async function buildVoteFeeTransaction(publicKey) {
 /**
  * Builds the vote transaction
  */
-export async function buildVoteTransaction(publicKey, optionNum, pollId = 1) {
-  const accountResponse = await server.getAccount(publicKey);
+export async function buildVoteTransaction(accountResponse, optionNum, pollId = 1) {
   const contract = new Contract(POLL_CONTRACTS[pollId]);
   
-  const voterVal = new Address(publicKey).toScVal();
+  const voterVal = new Address(accountResponse.accountId()).toScVal();
   const optionVal = nativeToScVal(optionNum, { type: 'u32' });
 
   const tx = new TransactionBuilder(accountResponse, {
