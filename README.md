@@ -28,19 +28,29 @@ npm run dev
 
 Visit `http://localhost:5173` to view the live poll.
 
-## Deployed Contract Information
-- **Network:** Stellar Testnet
-- **Contract ID:** `CALMB3XPIMAG63YDARE52FJXIITT3RUB3JWC4ZRKZKS7BYJZZ2MF2VHR`
-- **Transaction Hash (Upload):** `(See on testnet explorer)`
-- **Transaction Hash (Contract Initialization):** `(See on testnet explorer)`
+## Submission Details
+
+### Live Demo
+**[Live Demo on Vercel](https://live-poll-web-application-stellar.vercel.app/)**
+
+### Deployed Contract Addresses (Stellar Testnet)
+This application uses four distinct Soroban smart contracts for the four polls:
+1. **Best Smart Contract Language:** `CBUG37SP3SNYGOS65YSKYY236XHNFN3IJEKRGGLGPSQKXPIU7DRIUARJ`
+2. **Favorite Web3 Ecosystem:** `CDWCRN7KGQ5NV55I6K323IMYV4W7ONIKP3NAPC23DW5JSVRJNCOQPDIM`
+3. **Most Anticipated Stellar Feature:** `CARPEGCVTFWEVTLFGYCSZ2AVPWEUYRSGHYVEQ2MBBJRIFSAT7NOU2EIB`
+4. **Favorite Wallet:** `CCSN7R64NVN2RVLFGLYQBAYNF5BZZ6MZH2KBJNBOD4SNYE5ZG2Q4CQBB`
+
+### Transaction Hash (Contract Call)
+- **Example Vote Cast (Poll 2):** `0b4fae995ddc1de2acabcb6640e93993dda6fd1c288cd02ad66665d37bb18271`
+  - *Verify on [Stellar Expert Testnet](https://stellar.expert/explorer/testnet/tx/0b4fae995ddc1de2acabcb6640e93993dda6fd1c288cd02ad66665d37bb18271)*
 
 ## Error Handling Demonstrated
 1. **Wallet Not Found:** If no wallet extensions are installed, attempting to connect will throw a user-friendly error instructing them to install a wallet.
 2. **User Rejected:** If the user declines the signature request in their wallet, a specific error UI is displayed.
-3. **Insufficient Balance:** Attempting to cast a vote without enough XLM to pay the fee will catch the network error and tell the user they need more testnet funds.
+3. **Insufficient Balance / Failed Execution:** Attempting to cast a vote without enough XLM to pay the fee will catch the network error and tell the user they need more testnet funds. It also handles sequence number race conditions gracefully.
 
 ## Screenshots
 
-![Wallet Options Available](https://via.placeholder.com/600x400.png?text=Wallet+Options)
-
-*Example placeholder for wallet options screenshot*
+### Wallet Options Available
+![Wallet Options](assets/wallet-options.png)
+*(Note: If the image path differs, ensure your screenshot is named properly in the `assets/` folder)*
