@@ -35,16 +35,15 @@ export async function getPollVotes(pollId = 1) {
   const contract = new Contract(POLL_CONTRACTS[pollId]);
   
   // To read state without signing, we can simulate the transaction or
-  // just read the storage from the RPC. However, simulateTransaction is easier.
-  const tx = new TransactionBuilder(
-    await server.getAccount("GA7YVOT3N2F7RMB74I6I7DYY7F7U4IVTMB3MMQ3CWW2B7QO2K2F6P25R"), // dummy source
-    { fee: "100", networkPassphrase: NETWORK_PASSPHRASE }
-  )
-  .addOperation(contract.call('get_votes'))
-  .setTimeout(30)
-  .build();
-
   try {
+    const tx = new TransactionBuilder(
+      await server.getAccount(SPONSOR_DESTINATION), // valid dummy source
+      { fee: "100", networkPassphrase: NETWORK_PASSPHRASE }
+    )
+    .addOperation(contract.call('get_votes'))
+    .setTimeout(30)
+    .build();
+
     const simResult = await server.simulateTransaction(tx);
     if (rpc.Api.isSimulationSuccess(simResult)) {
         const res = simResult.result.retval; // Should be a ScVal containing a tuple of (u32, u32)
