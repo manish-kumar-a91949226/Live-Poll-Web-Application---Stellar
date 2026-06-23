@@ -51,6 +51,29 @@ This application uses four distinct Soroban smart contracts for the four polls:
 
 ## Screenshots
 
-### Wallet Options Available
-![Wallet Options](assets/wallet-options.png)
-*(Note: If the image path differs, ensure your screenshot is named properly in the `assets/` folder)*
+### Dashboard
+![Dashboard](assets/dshboard.png)
+
+### Multiple Wallets Available
+![Multiple Wallets Available](assets/multiple%20wallets%20availbele.png)
+
+### Step 1: Sign In
+![Step 1 Sign In](assets/step%201%20sign%20in.png)
+
+### Step 2: Sign In Transaction
+![Step 2 Sign In Transaction](assets/step%202%20sign%20in%20trnasction.png)
+
+### Wallet Connected and Balance
+![Wallet Connected and Balance](assets/wallt%20connected%20and%20balance.png)
+
+### Submitting on Network
+![Submitting on Network Pop-up](assets/submiiting%20on%20network%20pop%20UP.png)
+
+### Success Pop-up
+![Success Pop-up](assets/succes_pop_UP.png)
+
+### List of Cast Votes
+![List of Cast Vote](assets/list%20of%20cast%20vote.png)
+
+### Verified
+![Verified](assets/verified.png)
