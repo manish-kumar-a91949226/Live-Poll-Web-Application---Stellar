@@ -64,13 +64,14 @@ export async function buildVoteTransaction(publicKey, optionNum) {
   const accountResponse = await server.getAccount(publicKey);
   const contract = new Contract(CONTRACT_ID);
   
+  const voterVal = new Address(publicKey).toScVal();
   const optionVal = nativeToScVal(optionNum, { type: 'u32' });
 
   const tx = new TransactionBuilder(accountResponse, {
     fee: "100",
     networkPassphrase: NETWORK_PASSPHRASE,
   })
-    .addOperation(contract.call("vote", optionVal))
+    .addOperation(contract.call("vote", voterVal, optionVal))
     .setTimeout(30)
     .build();
 
