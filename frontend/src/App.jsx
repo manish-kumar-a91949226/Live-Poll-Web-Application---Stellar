@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { StellarWalletsKit, Networks } from '@creit.tech/stellar-wallets-kit';
 import { defaultModules } from '@creit.tech/stellar-wallets-kit/modules/utils';
-import { getPollVotes, buildVoteTransaction, server, NETWORK_PASSPHRASE, getNativeBalance } from './stellar';
+import { getPollVotes, buildVoteTransaction, server, NETWORK_PASSPHRASE, getNativeBalance, TransactionBuilder } from './stellar';
 import './App.css';
 
 function App() {
@@ -71,7 +71,8 @@ function App() {
       });
 
       setStatusMsg("Submitting transaction to network...");
-      const txResult = await server.sendTransaction(signedTxXdr); // Handle different return formats from wallets
+      const parsedSignedTx = TransactionBuilder.fromXDR(signedTxXdr, NETWORK_PASSPHRASE);
+      const txResult = await server.sendTransaction(parsedSignedTx); // Handle different return formats from wallets
 
       if (txResult.status === "ERROR") {
           throw new Error("Transaction failed on the network");

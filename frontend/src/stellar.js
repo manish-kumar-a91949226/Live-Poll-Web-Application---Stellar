@@ -1,4 +1,5 @@
-import { Contract, Networks, TransactionBuilder, rpc, xdr, Address, nativeToScVal, Horizon } from '@stellar/stellar-sdk';
+import { Contract, Networks, TransactionBuilder as TB, rpc, xdr, Address, nativeToScVal, Horizon } from '@stellar/stellar-sdk';
+export const TransactionBuilder = TB;
 
 const RPC_URL = "https://soroban-testnet.stellar.org:443";
 export const NETWORK_PASSPHRASE = Networks.TESTNET;
