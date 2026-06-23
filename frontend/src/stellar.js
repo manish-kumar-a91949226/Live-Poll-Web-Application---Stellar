@@ -1,9 +1,10 @@
-import { Contract, Networks, TransactionBuilder as TB, rpc, xdr, Address, nativeToScVal, Horizon } from '@stellar/stellar-sdk';
+import { Contract, Networks, TransactionBuilder as TB, rpc, xdr, Address, nativeToScVal, Horizon, Operation, Asset } from '@stellar/stellar-sdk';
 export const TransactionBuilder = TB;
 
 const RPC_URL = "https://soroban-testnet.stellar.org:443";
 export const NETWORK_PASSPHRASE = Networks.TESTNET;
-export const CONTRACT_ID = "CALMB3XPIMAG63YDARE52FJXIITT3RUB3JWC4ZRKZKS7BYJZZ2MF2VHR";
+export const CONTRACT_ID = "CBLGZ32F34DBT3M36DB6YYXONVGEEXQW2JUMY4A3YOPL3Z5FDRZ7S5R4";
+export const SPONSOR_DESTINATION = "GBV7SLQKG4S7S3M3F4WCUJKK775IL24X6QGYH3YCGYSZNZWSK7IJCGPX"; // Mock destination for donations
 
 export const server = new rpc.Server(RPC_URL);
 export const horizonServer = new Horizon.Server("https://horizon-testnet.stellar.org");
@@ -60,34 +61,42 @@ export async function getPollVotes() {
  * Builds the vote transaction
  */
 export async function buildVoteTransaction(publicKey, optionNum) {
-    const account = await server.getAccount(publicKey);
-    const contract = new Contract(CONTRACT_ID);
-    
-    // Convert optionNum to ScVal u32
-    const optionScVal = nativeToScVal(optionNum, { type: 'u32' });
-    const voterScVal = new Address(publicKey).toScVal();
+  const accountResponse = await server.getAccount(publicKey);
+  const contract = new Contract(CONTRACT_ID);
+  
+  const optionVal = nativeToScVal(optionNum, { type: 'u32' });
 
-    let tx = new TransactionBuilder(account, {
-        fee: "100000",
-        networkPassphrase: NETWORK_PASSPHRASE
-    })
-    .addOperation(contract.call('vote', voterScVal, optionScVal))
+  const tx = new TransactionBuilder(accountResponse, {
+    fee: "100",
+    networkPassphrase: NETWORK_PASSPHRASE,
+  })
+    .addOperation(contract.call("vote", optionVal))
     .setTimeout(30)
     .build();
 
-    // Simulate to populate footprint
-    const simulatedTx = await server.prepareTransaction(tx);
-    
-    // Safely extract XDR string
-    if (typeof simulatedTx === 'string') return simulatedTx;
-    if (typeof simulatedTx.toEnvelope === 'function') return simulatedTx.toEnvelope().toXDR('base64');
-    if (typeof simulatedTx.toXDR === 'function') return simulatedTx.toXDR();
-    if (simulatedTx.build) {
-        const built = simulatedTx.build();
-        if (typeof built.toEnvelope === 'function') return built.toEnvelope().toXDR('base64');
-        if (typeof built.toXDR === 'function') return built.toXDR();
-    }
-    
-    // Fallback: build our own envelope
-    return tx.toEnvelope().toXDR('base64');
+  const simulatedTx = await server.simulateTransaction(tx);
+  if (simulatedTx.error) {
+    throw new Error(simulatedTx.error);
+  }
+
+  const preparedTx = await server.prepareTransaction(tx);
+  return preparedTx.toEnvelope().toXDR('base64');
+}
+
+export async function buildSponsorTransaction(publicKey, amount) {
+  const accountResponse = await server.getAccount(publicKey);
+  
+  const tx = new TransactionBuilder(accountResponse, {
+    fee: "100",
+    networkPassphrase: NETWORK_PASSPHRASE,
+  })
+    .addOperation(Operation.payment({
+      destination: SPONSOR_DESTINATION,
+      asset: Asset.native(),
+      amount: amount.toString(),
+    }))
+    .setTimeout(30)
+    .build();
+
+  return tx.toEnvelope().toXDR('base64');
 }
