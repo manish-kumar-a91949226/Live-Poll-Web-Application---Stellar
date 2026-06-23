@@ -60,7 +60,20 @@ function App() {
 
       setStatusMsg("Please sign the transaction in your wallet...");
       
-      const { signedTxXdr } = await StellarWalletsKit.signTransaction(tx.toXDR(), {
+      let xdrString;
+      if (typeof tx === 'string') {
+        xdrString = tx;
+      } else if (typeof tx.toXDR === 'function') {
+        xdrString = tx.toXDR();
+      } else if (typeof tx.toEnvelope === 'function') {
+        xdrString = tx.toEnvelope().toXDR('base64');
+      } else if (tx.build && typeof tx.build === 'function') {
+        xdrString = tx.build().toXDR();
+      } else {
+        throw new Error("Could not parse transaction XDR from the prepared transaction");
+      }
+
+      const { signedTxXdr } = await StellarWalletsKit.signTransaction(xdrString, {
         networkPassphrase: NETWORK_PASSPHRASE
       });
 
