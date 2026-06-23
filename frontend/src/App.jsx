@@ -172,6 +172,7 @@ function App() {
       } else if (msg.includes("balance") || msg.includes("insufficient") || msg.includes("tx_insufficient_balance")) {
         setStatusMsg("Error: Insufficient balance to cover fees.");
       } else if (msg.includes("Already voted") || msg.includes("already voted") || msg.includes("UnreachableCodeReached")) {
+        // Double voting is now allowed, so this error shouldn't happen unless the contract fails for another reason.
         setStatusMsg("Error: You have already voted in this poll!");
       } else {
         setStatusMsg("Transaction failed: " + msg.substring(0, 50));
@@ -244,21 +245,24 @@ function App() {
               <div className="poll-option" onClick={() => handleVote('A')}>
                 <div className="poll-progress" style={{ width: `${pctA}%` }}></div>
                 <div className="poll-content">
-                  <span>Rust (Soroban)</span>
+                  <span>Rust (Soroban) <span style={{fontSize: "0.8rem", color: "var(--primary-color)"}}>(Fee: 1 XLM)</span></span>
                   <span className="poll-votes">{pctA}% ({votes.A})</span>
                 </div>
               </div>
               <div className="poll-option" onClick={() => handleVote('B')}>
                 <div className="poll-progress" style={{ width: `${pctB}%` }}></div>
                 <div className="poll-content">
-                  <span>Solidity</span>
+                  <span>Solidity <span style={{fontSize: "0.8rem", color: "var(--primary-color)"}}>(Fee: 1 XLM)</span></span>
                   <span className="poll-votes">{pctB}% ({votes.B})</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="card glass-panel">
+          <div className="card glass-panel" style={{ opacity: 0.6, position: 'relative' }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.4)', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '24px' }}>
+              <span style={{ background: 'var(--primary-color)', padding: '0.5rem 1rem', borderRadius: '12px', fontWeight: 'bold' }}>COMING SOON</span>
+            </div>
             <div className="header-actions">
               <div>
                 <h2>Favorite Web3 Ecosystem?</h2>
@@ -283,7 +287,10 @@ function App() {
             </div>
           </div>
 
-          <div className="card glass-panel">
+          <div className="card glass-panel" style={{ opacity: 0.6, position: 'relative' }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.4)', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '24px' }}>
+              <span style={{ background: 'var(--primary-color)', padding: '0.5rem 1rem', borderRadius: '12px', fontWeight: 'bold' }}>COMING SOON</span>
+            </div>
             <div className="header-actions">
               <div>
                 <h2>Most Promising Hackathon Track?</h2>
@@ -308,7 +315,10 @@ function App() {
             </div>
           </div>
 
-          <div className="card glass-panel">
+          <div className="card glass-panel" style={{ opacity: 0.6, position: 'relative' }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.4)', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '24px' }}>
+              <span style={{ background: 'var(--primary-color)', padding: '0.5rem 1rem', borderRadius: '12px', fontWeight: 'bold' }}>COMING SOON</span>
+            </div>
             <div className="header-actions">
               <div>
                 <h2>Preferred Wallet Extension?</h2>

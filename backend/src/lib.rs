@@ -20,12 +20,6 @@ impl LivePollContract {
     pub fn vote(env: Env, voter: Address, option: u32) {
         voter.require_auth();
 
-        // Check if voter already voted
-        let has_voted: bool = env.storage().instance().has(&voter);
-        if has_voted {
-            panic!("User already voted");
-        }
-
         if option == 1 {
             let mut current: u32 = env.storage().instance().get(&OPTION_A).unwrap_or(0);
             current += 1;
@@ -37,9 +31,6 @@ impl LivePollContract {
         } else {
             panic!("Invalid option");
         }
-
-        // Mark as voted
-        env.storage().instance().set(&voter, &true);
 
         // Emit an event
         env.events().publish((symbol_short!("vote"), option), voter);

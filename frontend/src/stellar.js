@@ -3,7 +3,7 @@ export const TransactionBuilder = TB;
 
 const RPC_URL = "https://soroban-testnet.stellar.org:443";
 export const NETWORK_PASSPHRASE = Networks.TESTNET;
-export const CONTRACT_ID = "CALMB3XPIMAG63YDARE52FJXIITT3RUB3JWC4ZRKZKS7BYJZZ2MF2VHR";
+export const CONTRACT_ID = "CBUG37SP3SNYGOS65YSKYY236XHNFN3IJEKRGGLGPSQKXPIU7DRIUARJ";
 export const SPONSOR_DESTINATION = "GBV7SLQKG4S7S3M3F4WCUJKK775IL24X6QGYH3YCGYSZNZWSK7IJCGPX"; // Mock destination for donations
 
 export const server = new rpc.Server(RPC_URL);
@@ -58,7 +58,7 @@ export async function getPollVotes() {
 }
 
 /**
- * Builds the vote transaction
+ * Builds the vote transaction (requires 1 XLM payment)
  */
 export async function buildVoteTransaction(publicKey, optionNum) {
   const accountResponse = await server.getAccount(publicKey);
@@ -71,6 +71,11 @@ export async function buildVoteTransaction(publicKey, optionNum) {
     fee: "100",
     networkPassphrase: NETWORK_PASSPHRASE,
   })
+    .addOperation(Operation.payment({
+      destination: SPONSOR_DESTINATION,
+      asset: Asset.native(),
+      amount: "1.0000000",
+    }))
     .addOperation(contract.call("vote", voterVal, optionVal))
     .setTimeout(30)
     .build();
