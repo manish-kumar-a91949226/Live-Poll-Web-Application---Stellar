@@ -3,7 +3,7 @@ export const TransactionBuilder = TB;
 
 const RPC_URL = "https://soroban-testnet.stellar.org:443";
 export const NETWORK_PASSPHRASE = Networks.TESTNET;
-export const CONTRACT_ID = "CBLGZ32F34DBT3M36DB6YYXONVGEEXQW2JUMY4A3YOPL3Z5FDRZ7S5R4";
+export const CONTRACT_ID = "CALMB3XPIMAG63YDARE52FJXIITT3RUB3JWC4ZRKZKS7BYJZZ2MF2VHR";
 export const SPONSOR_DESTINATION = "GBV7SLQKG4S7S3M3F4WCUJKK775IL24X6QGYH3YCGYSZNZWSK7IJCGPX"; // Mock destination for donations
 
 export const server = new rpc.Server(RPC_URL);

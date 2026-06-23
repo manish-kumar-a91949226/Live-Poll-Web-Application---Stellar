@@ -171,8 +171,8 @@ function App() {
         setStatusMsg("Error: Transaction was rejected by the user.");
       } else if (msg.includes("balance") || msg.includes("insufficient") || msg.includes("tx_insufficient_balance")) {
         setStatusMsg("Error: Insufficient balance to cover fees.");
-      } else if (msg.includes("Already voted") || msg.includes("already voted")) {
-        setStatusMsg("Error: You have already voted!");
+      } else if (msg.includes("Already voted") || msg.includes("already voted") || msg.includes("UnreachableCodeReached")) {
+        setStatusMsg("Error: You have already voted in this poll!");
       } else {
         setStatusMsg("Transaction failed: " + msg.substring(0, 50));
       }
