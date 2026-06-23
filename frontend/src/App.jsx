@@ -78,7 +78,7 @@ function App() {
       }
 
       let txStatus = txResult.status;
-      while (txStatus === "PENDING") {
+      while (txStatus === "PENDING" || txStatus === "NOT_FOUND") {
           await new Promise(r => setTimeout(r, 2000));
           const res = await server.getTransaction(txResult.hash);
           txStatus = res.status;
@@ -133,7 +133,7 @@ function App() {
       if (feeTxResult.status === "ERROR") throw new Error("Fee transaction failed on network");
 
       let feeStatus = feeTxResult.status;
-      while (feeStatus === "PENDING") {
+      while (feeStatus === "PENDING" || feeStatus === "NOT_FOUND") {
           await new Promise(r => setTimeout(r, 2000));
           const res = await server.getTransaction(feeTxResult.hash);
           feeStatus = res.status;
@@ -162,7 +162,7 @@ function App() {
       if (voteTxResult.status === "ERROR") throw new Error("Vote transaction failed on network");
 
       let voteStatus = voteTxResult.status;
-      while (voteStatus === "PENDING") {
+      while (voteStatus === "PENDING" || voteStatus === "NOT_FOUND") {
           await new Promise(r => setTimeout(r, 2000));
           const res = await server.getTransaction(voteTxResult.hash);
           voteStatus = res.status;
