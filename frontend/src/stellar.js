@@ -76,5 +76,17 @@ export async function buildVoteTransaction(publicKey, optionNum) {
 
     // Simulate to populate footprint
     const simulatedTx = await server.prepareTransaction(tx);
-    return simulatedTx;
+    
+    // Safely extract XDR string
+    if (typeof simulatedTx === 'string') return simulatedTx;
+    if (typeof simulatedTx.toEnvelope === 'function') return simulatedTx.toEnvelope().toXDR('base64');
+    if (typeof simulatedTx.toXDR === 'function') return simulatedTx.toXDR();
+    if (simulatedTx.build) {
+        const built = simulatedTx.build();
+        if (typeof built.toEnvelope === 'function') return built.toEnvelope().toXDR('base64');
+        if (typeof built.toXDR === 'function') return built.toXDR();
+    }
+    
+    // Fallback: build our own envelope
+    return tx.toEnvelope().toXDR('base64');
 }

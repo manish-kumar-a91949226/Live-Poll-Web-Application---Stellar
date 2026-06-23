@@ -60,17 +60,10 @@ function App() {
 
       setStatusMsg("Please sign the transaction in your wallet...");
       
-      let xdrString;
-      if (typeof tx === 'string') {
-        xdrString = tx;
-      } else if (typeof tx.toXDR === 'function') {
-        xdrString = tx.toXDR();
-      } else if (typeof tx.toEnvelope === 'function') {
-        xdrString = tx.toEnvelope().toXDR('base64');
-      } else if (tx.build && typeof tx.build === 'function') {
-        xdrString = tx.build().toXDR();
-      } else {
-        throw new Error("Could not parse transaction XDR from the prepared transaction");
+      let xdrString = tx;
+      if (typeof tx !== 'string') {
+        if (typeof tx.toXDR === 'function') xdrString = tx.toXDR();
+        else if (typeof tx.toEnvelope === 'function') xdrString = tx.toEnvelope().toXDR('base64');
       }
 
       const { signedTxXdr } = await StellarWalletsKit.signTransaction(xdrString, {
@@ -185,6 +178,31 @@ function App() {
             <div className="poll-content">
               <span>Solidity</span>
               <span className="poll-votes">{pctB}% ({votes.B})</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="card glass-panel" style={{ marginTop: '2rem' }}>
+        <div className="header-actions">
+          <div>
+            <h2>Favorite Web3 Ecosystem?</h2>
+            <p style={{ color: "var(--text-muted)", marginTop: "0.5rem", fontSize: "0.9rem" }}>Total votes cast: 42</p>
+          </div>
+        </div>
+
+        <div className="poll-options">
+          <div className="poll-option" onClick={() => { setStatus("pending"); setStatusMsg("Coming soon! Only first poll is live on mainnet."); setTimeout(() => { setStatus(""); setStatusMsg(""); }, 3000); }}>
+            <div className="poll-progress" style={{ width: `75%` }}></div>
+            <div className="poll-content">
+              <span>Stellar</span>
+              <span className="poll-votes">75% (31)</span>
+            </div>
+          </div>
+          <div className="poll-option" onClick={() => { setStatus("pending"); setStatusMsg("Coming soon! Only first poll is live on mainnet."); setTimeout(() => { setStatus(""); setStatusMsg(""); }, 3000); }}>
+            <div className="poll-progress" style={{ width: `25%` }}></div>
+            <div className="poll-content">
+              <span>Ethereum</span>
+              <span className="poll-votes">25% (11)</span>
             </div>
           </div>
         </div>
